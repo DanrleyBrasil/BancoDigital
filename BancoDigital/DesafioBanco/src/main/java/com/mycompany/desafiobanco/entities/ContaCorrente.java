@@ -1,12 +1,9 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.desafiobanco.entities;
 
 /**
- *
- * @author dbs55
+ * Classe que representa uma conta corrente.
+ * 
+ * @autor danrleybrasil
  */
 public class ContaCorrente extends Conta {
 
@@ -15,9 +12,8 @@ public class ContaCorrente extends Conta {
     }
     
     @Override
-    public void imprimirExtrato() {
-        System.out.println("Extrato conta Corrente");
-        super.imprimirInfosComuns();
+    public String imprimirExtrato() {
+        return "Extrato Conta Corrente:\n" + super.imprimirExtrato();
     }
 
 }

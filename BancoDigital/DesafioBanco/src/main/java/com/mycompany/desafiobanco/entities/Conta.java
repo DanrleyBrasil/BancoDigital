@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.desafiobanco.entities;
 
 import com.mycompany.desafiobanco.enums.TipoTransacao;
@@ -11,12 +7,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
- * @author dbs55
+ * Classe abstrata que representa uma conta bancaria generica.
+ * 
+ * @autor danrleybrasil
  */
 public abstract class Conta implements iConta {
 
-    private static final int AGENCIA_PADRAO = 0001;
+    private static final int AGENCIA_PADRAO = 1;
     private static int SEQUENCIAL = 1;
 
     private List<Transacoes> historicoTransacoes;
@@ -25,7 +22,7 @@ public abstract class Conta implements iConta {
     protected int numero;
     protected double saldo;
     protected Cliente cliente;
-    protected TipoTransacao trasacaoAtual;
+    protected TipoTransacao transacaoAtual;
 
     public Conta(Cliente cliente) {
         this.agencia = AGENCIA_PADRAO;
@@ -35,61 +32,63 @@ public abstract class Conta implements iConta {
     }
 
     @Override
-    public void retirada(double valor) {
+    public String retirada(double valor) {
         if (saldo >= valor) {
             saldo -= valor;
-            if (trasacaoAtual != TipoTransacao.TRANSFERENCIA_ENVIADA) {
-                registrarTransacao(TipoTransacao.SAQUE, valor, null); // Transação interna, outraParte é nula
+            if (transacaoAtual != TipoTransacao.TRANSFERENCIA_ENVIADA) {
+                registrarTransacao(TipoTransacao.SAQUE, valor, null);
             }
+            return "Cliente " + cliente.getNome() + " sacou " + valor + ".";
         } else {
-            System.out.println("Saldo insuficiente.");
+            return "Saldo insuficiente.";
         }
     }
 
     @Override
-    public void depositar(double valor) {
+    public String depositar(double valor) {
         saldo += valor;
-        if (trasacaoAtual != TipoTransacao.TRANSFERENCIA_RECEBIDA) {
-            registrarTransacao(TipoTransacao.DEPOSITO, valor, null); // Transação interna, outraParte é nula
+        if (transacaoAtual != TipoTransacao.TRANSFERENCIA_RECEBIDA) {
+            registrarTransacao(TipoTransacao.DEPOSITO, valor, null);
         }
+        return "Cliente " + cliente.getNome() + " depositou " + valor + ".";
     }
 
     @Override
-    public void transferir(double valor, Conta contaDestino) {
-        trasacaoAtual = TipoTransacao.TRANSFERENCIA_ENVIADA;
+    public String transferir(double valor, Conta contaDestino) {
+        transacaoAtual = TipoTransacao.TRANSFERENCIA_ENVIADA;
         if (saldo >= valor) {
-            this.retirada(valor); // Deduzindo o valor transferido da conta de origem
-            // Registrando a transação como uma transferência
+            this.retirada(valor);
             this.registrarTransacao(TipoTransacao.TRANSFERENCIA_ENVIADA, valor, contaDestino.cliente);
-            contaDestino.trasacaoAtual = TipoTransacao.TRANSFERENCIA_RECEBIDA;
-            contaDestino.depositar(valor); // Creditando o valor transferido na conta de destino
+            contaDestino.transacaoAtual = TipoTransacao.TRANSFERENCIA_RECEBIDA;
+            contaDestino.depositar(valor);
             contaDestino.registrarTransacao(TipoTransacao.TRANSFERENCIA_RECEBIDA, valor, this.cliente);
-
+            return "Cliente " + cliente.getNome() + " transferiu " + valor + " para Cliente " + contaDestino.cliente.getNome() + ".";
         } else {
-            System.out.println("Saldo insuficiente para realizar a transferência.");
+            return "Saldo insuficiente para realizar a transferencia.";
         }
     }
 
-    // Método para registrar uma transação
     @Override
     public void registrarTransacao(TipoTransacao tipo, double valor, Cliente outraParte) {
         Transacoes transacao = new Transacoes(tipo, valor, new Timestamp(System.currentTimeMillis()), outraParte);
         historicoTransacoes.add(transacao);
     }
 
-    // Método para imprimir o histórico de transações
     @Override
-    public void imprimirHistoricoTransacoes() {
-        System.out.println("Histórico de Transações:");
+    public String imprimirHistoricoTransacoes() {
+        StringBuilder historico = new StringBuilder("Historico de Transacoes de " + cliente.getNome() + ":\n");
         for (Transacoes transacao : historicoTransacoes) {
-            System.out.println(transacao);
+            historico.append(transacao).append("\n");
         }
+        return historico.toString();
     }
 
-    protected void imprimirInfosComuns() {
-        System.out.println(String.format("Titular: %s", this.cliente.getNome()));
-        System.out.println(String.format("Agência: %d", this.agencia));
-        System.out.println(String.format("Número: %d", this.numero));
-        System.out.println(String.format("Saldo: %.2f", this.saldo));
+    @Override
+    public String imprimirExtrato() {
+        StringBuilder extrato = new StringBuilder("Extrato da Conta de " + cliente.getNome() + ":\n");
+        extrato.append(String.format("Agencia: %d\n", this.agencia));
+        extrato.append(String.format("Numero: %d\n", this.numero));
+        extrato.append(String.format("Saldo: %.2f\n", this.saldo));
+        return extrato.toString();
     }
 }
